@@ -6,9 +6,17 @@
 import OpenAI from 'openai';
 import { logger } from '../utils/logger.js';
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-});
+// Lazy initialization - client is created on first use
+let openai = null;
+
+function getOpenAI() {
+    if (!openai) {
+        openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY
+        });
+    }
+    return openai;
+}
 
 /**
  * Classify an incoming lead using GPT-4
@@ -73,7 +81,7 @@ Respond with JSON:
   "keyPhrases": ["phrase1", "phrase2"]
 }`;
 
-        const response = await openai.chat.completions.create({
+        const response = await getOpenAI().chat.completions.create({
             model: 'gpt-4-turbo-preview',
             messages: [
                 { role: 'system', content: systemPrompt },
@@ -126,7 +134,7 @@ Respond with JSON:
  */
 export async function analyzeSentiment(text, previousSentiment = null) {
     try {
-        const response = await openai.chat.completions.create({
+        const response = await getOpenAI().chat.completions.create({
             model: 'gpt-4-turbo-preview',
             messages: [
                 {

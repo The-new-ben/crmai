@@ -60,62 +60,77 @@ router.post('/ingest', async (req, res) => {
         // 4. Extract contact info from raw data
         const contactInfo = extractContactInfo(rawData);
 
-        // 5. Store in polymorphic database
-        const lead = await db.query(`
-      INSERT INTO universal_leads_ledger (
-        source_channel,
-        source_identifier,
-        source_provider,
-        raw_data,
-        context_vectors,
-        contact_name,
-        contact_phone,
-        contact_email,
-        detected_intent,
-        detected_urgency,
-        estimated_value,
-        required_persona,
-        business_vertical,
-        primary_language,
-        lead_score,
-        conversion_probability
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-      RETURNING id, created_at
-    `, [
-            sourceChannel,
-            sourceIdentifier,
-            sourceProvider,
-            JSON.stringify(rawData),
-            JSON.stringify(classification.embeddings || {}),
-            contactInfo.name,
-            contactInfo.phone,
-            contactInfo.email,
-            classification.intent,
-            classification.urgency,
-            classification.estimatedValue,
-            classification.persona,
-            classification.vertical,
-            classification.language || 'en',
-            classification.score || 50,
-            classification.conversionProbability || 0.5
-        ]);
+        // 5. Try to store in database (graceful degradation if DB unavailable)
+        let leadId = null;
+        let dbAvailable = false;
 
-        const leadId = lead.rows[0].id;
+        try {
+            const dbHealthy = await db.healthCheck();
 
-        // 6. Log to audit trail
-        await db.query(`
-      INSERT INTO audit_log (event_type, event_source, lead_id, event_data, ip_address, user_agent)
-      VALUES ($1, $2, $3, $4, $5, $6)
-    `, [
-            'lead_created',
-            'api',
-            leadId,
-            JSON.stringify({ classification, processingTime: Date.now() - startTime }),
-            req.ip,
-            req.headers['user-agent']
-        ]);
+            if (dbHealthy) {
+                dbAvailable = true;
+                const lead = await db.query(`
+                  INSERT INTO universal_leads_ledger (
+                    source_channel,
+                    source_identifier,
+                    source_provider,
+                    raw_data,
+                    context_vectors,
+                    contact_name,
+                    contact_phone,
+                    contact_email,
+                    detected_intent,
+                    detected_urgency,
+                    estimated_value,
+                    required_persona,
+                    business_vertical,
+                    primary_language,
+                    lead_score,
+                    conversion_probability
+                  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+                  RETURNING id, created_at
+                `, [
+                    sourceChannel,
+                    sourceIdentifier,
+                    sourceProvider,
+                    JSON.stringify(rawData),
+                    JSON.stringify(classification.embeddings || {}),
+                    contactInfo.name,
+                    contactInfo.phone,
+                    contactInfo.email,
+                    classification.intent,
+                    classification.urgency,
+                    classification.estimatedValue,
+                    classification.persona,
+                    classification.vertical,
+                    classification.language || 'en',
+                    classification.score || 50,
+                    classification.conversionProbability || 0.5
+                ]);
 
-        // 7. Emit event for Chief of Staff Agent (async, don't wait)
+                leadId = lead.rows[0].id;
+
+                // Log to audit trail
+                await db.query(`
+                  INSERT INTO audit_log (event_type, event_source, lead_id, event_data, ip_address, user_agent)
+                  VALUES ($1, $2, $3, $4, $5, $6)
+                `, [
+                    'lead_created',
+                    'api',
+                    leadId,
+                    JSON.stringify({ classification, processingTime: Date.now() - startTime }),
+                    req.ip,
+                    req.headers['user-agent']
+                ]);
+            }
+        } catch (dbError) {
+            logger.warn(`[${requestId}] Database unavailable, continuing without persistence`, {
+                error: dbError.message
+            });
+            leadId = `temp_${requestId}`;
+        }
+
+        // 6. Emit event for Chief of Staff Agent (async, don't wait)
         eventBus.emit('lead:new', {
             leadId,
             classification,
@@ -123,7 +138,7 @@ router.post('/ingest', async (req, res) => {
             priority: calculatePriority(classification)
         });
 
-        // 8. Return success
+        // 7. Return success
         const processingTime = Date.now() - startTime;
 
         res.status(202).json({
@@ -131,11 +146,17 @@ router.post('/ingest', async (req, res) => {
             leadId,
             requestId,
             processingTimeMs: processingTime,
+            persisted: dbAvailable,
             classification: {
                 intent: classification.intent,
                 urgency: classification.urgency,
+                estimatedValue: classification.estimatedValue,
                 persona: classification.persona,
-                language: classification.language
+                vertical: classification.vertical,
+                language: classification.language,
+                score: classification.score,
+                conversionProbability: classification.conversionProbability,
+                summary: classification.summary
             }
         });
 
