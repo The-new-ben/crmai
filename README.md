@@ -38,32 +38,153 @@ A radical automation platform where the Admin does **zero manual work**. The sys
 
 ## 🔧 Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| **Database** | PostgreSQL + JSONB |
-| **Backend API** | Node.js / Python (FastAPI) |
-| **AI Agents** | LangChain + CrewAI |
-| **Voice AI** | Vapi.ai / Twilio |
-| **Messaging** | WhatsApp Business API |
-| **Frontend** | Next.js + React |
+| Layer | Technology | Status |
+|-------|------------|--------|
+| **Database** | PostgreSQL + JSONB | ✅ Schema ready |
+| **Backend API** | Node.js (Express) | ✅ Implemented |
+| **AI Agents** | Python (OpenAI GPT-4) | ✅ Implemented |
+| **Voice AI** | Vapi.ai (+ Twilio option) | ✅ Modular |
+| **Messaging** | WhatsApp Business API | ✅ Modular |
+| **Email** | SendGrid (+ Resend option) | ✅ Modular |
+| **E-Signature** | DocuSign (+ PandaDoc option) | ✅ Modular |
+| **Payments** | Stripe (+ PayPal option) | ✅ Modular |
+| **Frontend** | Next.js 15 + React | ✅ Implemented |
 
 ## 📁 Project Structure
 
 ```
 crmai/
-├── database/           # SQL schemas & migrations
-├── api/                # Ingestion engine & webhooks
-├── agents/             # Recursive AI agent system
-├── dashboard/          # God-view React frontend
-├── docs/               # Architecture & documentation
-└── scripts/            # Automation & cron jobs
+├── database/
+│   └── schema.sql           # Polymorphic PostgreSQL schema
+├── api/
+│   ├── src/
+│   │   ├── index.js         # Express server
+│   │   ├── routes/
+│   │   │   └── webhook.js   # Universal webhook receiver
+│   │   ├── services/
+│   │   │   ├── database.js  # PostgreSQL connection
+│   │   │   ├── event-bus.js # Event system
+│   │   │   └── nlp-classifier.js # AI classification
+│   │   ├── providers/
+│   │   │   └── index.js     # Modular provider system
+│   │   └── utils/
+│   │       └── logger.js    # Winston logger
+│   └── package.json
+├── agents/
+│   ├── core.py              # Recursive AI agents
+│   └── the_improver.py      # Self-healing optimization
+├── dashboard/
+│   ├── app/
+│   │   ├── page.tsx         # Main dashboard
+│   │   ├── layout.tsx
+│   │   └── globals.css
+│   ├── components/
+│   │   ├── MoneyStream.tsx  # Pipeline visualization
+│   │   ├── LeadCard.tsx     # Lead display
+│   │   ├── StatsBar.tsx     # Statistics
+│   │   └── EmergencyStop.tsx
+│   └── lib/
+│       └── types.ts
+├── docs/
+├── scripts/
+├── .env.example
+├── .gitignore
+├── LICENSE
+└── README.md
 ```
+
+## 🚀 Quick Start
+
+### 1. Database Setup
+```bash
+# Create PostgreSQL database
+createdb zerotouch
+
+# Run schema
+psql -d zerotouch -f database/schema.sql
+```
+
+### 2. API Server
+```bash
+cd api
+cp ../.env.example .env
+# Edit .env with your API keys
+npm install
+npm run dev
+```
+
+### 3. Dashboard
+```bash
+cd dashboard
+npm install
+npm run dev
+```
+
+### 4. Agents (Python)
+```bash
+cd agents
+pip install openai asyncio
+# Agents are triggered via event bus from API
+```
+
+## 🔌 Modular Provider System
+
+All external services are **plug-and-play**:
+
+| Service Type | Default Provider | Alternatives |
+|--------------|------------------|--------------|
+| Voice AI | Vapi.ai | Twilio |
+| Messaging | WhatsApp Business | Twilio SMS |
+| Email | SendGrid | Resend |
+| E-Signature | DocuSign | PandaDoc |
+| Payments | Stripe | PayPal |
+
+Switch providers by updating `provider_configurations` table or environment variables.
 
 ## 🌐 Language Support
 
-- **Hebrew (RTL)** — Native primary language
-- **English** — Bilingual processing
+- **English** — Primary language (default)
+- **Hebrew (עברית)** — Secondary language with RTL support
+
+## 🤖 Agent Personas
+
+| Persona | Use Case | Style |
+|---------|----------|-------|
+| 🦈 **Shark** | Legal disputes, tough negotiations | Aggressive, direct |
+| 💗 **Empath** | Emotional matters, complaints | Warm, understanding |
+| 🎩 **Concierge** | VIP/luxury clients | Sophisticated, attentive |
+| 👔 **Professional** | Standard business | Efficient, helpful |
+| 🎯 **Closer** | Final deal closing | Urgent, encouraging |
+
+## 📊 God-View Dashboard
+
+The dashboard shows the **Money Stream**:
+
+```
+📥 Incoming → 🤖 AI Processing → 💬 Negotiating → 📄 Contract Sent → 💰 PAID
+```
+
+Features:
+- Real-time lead tracking
+- Urgency-based prioritization
+- Persona assignment visualization
+- Revenue counter
+- 🛑 **Emergency Stop** button (only control needed)
+
+## 🔄 Self-Healing System
+
+**The Improver** runs daily:
+1. Analyzes lost leads from past 24 hours
+2. Identifies failure patterns
+3. Generates improved prompts
+4. A/B tests new versions automatically
+
+The system gets smarter every day without code changes.
 
 ---
 
-**Created:** December 2025 | **Status:** 🏗️ Architecture Phase
+**Created:** December 2025 | **Status:** ✅ Core Implementation Complete
+
+## 📝 License
+
+MIT License - See [LICENSE](LICENSE) for details.
