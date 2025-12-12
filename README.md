@@ -1,41 +1,69 @@
-# CRMAI - Cyprus Real Estate Platform
+# Project Zero-Touch
 
-> 🏗️ **Playground & Development Workspace**
+> 🚀 **Universal, Self-Adaptive Autonomous Business Ecosystem**
 
-A modern, AI-powered real estate platform for Cyprus properties.
+A radical automation platform where the Admin does **zero manual work**. The system observes, learns, and executes autonomously.
 
-## 🚀 Quick Start
+## 🧠 Core Philosophy
 
-```bash
-# Clone the repository
-git clone https://github.com/The-new-ben/crmai.git
+**"Radical Automation"** — The system handles everything: lead ingestion, intelligent classification, multi-channel outreach (WhatsApp, Email, AI Voice), autonomous negotiation, contract generation, and payment processing.
 
-# Navigate to project
-cd crmai
+## 🏗️ Architecture
 
-# Install dependencies (coming soon)
-npm install
 ```
+┌─────────────────────────────────────────────────────────────────┐
+│                     GOD-VIEW DASHBOARD                          │
+│            Incoming → Processing → Negotiating → PAID           │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+┌───────────────────────────────┼───────────────────────────────┐
+│                    RECURSIVE AI AGENTS                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐            │
+│  │ Chief of    │→│   Hunter    │→│   Closer    │            │
+│  │ Staff       │  │   Agent    │  │   Agent    │            │
+│  │ (Decision)  │  │ (Outreach) │  │ (Contract) │            │
+│  └─────────────┘  └─────────────┘  └─────────────┘            │
+└───────────────────────────────────────────────────────────────┘
+                                │
+┌───────────────────────────────┼───────────────────────────────┐
+│                  VACUUM INGESTION ENGINE                       │
+│              Universal Webhook + NLP Classifier                │
+└───────────────────────────────────────────────────────────────┘
+                                │
+┌───────────────────────────────┼───────────────────────────────┐
+│                POLYMORPHIC DATABASE (PostgreSQL)               │
+│  universal_leads_ledger │ dynamic_ontology │ negotiation_logs │
+└───────────────────────────────────────────────────────────────┘
+```
+
+## 🔧 Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| **Database** | PostgreSQL + JSONB |
+| **Backend API** | Node.js / Python (FastAPI) |
+| **AI Agents** | LangChain + CrewAI |
+| **Voice AI** | Vapi.ai / Twilio |
+| **Messaging** | WhatsApp Business API |
+| **Frontend** | Next.js + React |
 
 ## 📁 Project Structure
 
 ```
 crmai/
-├── docs/           # Documentation & architecture
-├── src/            # Source code
-├── scripts/        # Utility scripts
-├── tests/          # Test files
-└── README.md
+├── database/           # SQL schemas & migrations
+├── api/                # Ingestion engine & webhooks
+├── agents/             # Recursive AI agent system
+├── dashboard/          # God-view React frontend
+├── docs/               # Architecture & documentation
+└── scripts/            # Automation & cron jobs
 ```
 
-## 🛠️ Tech Stack
+## 🌐 Language Support
 
-*To be defined based on project requirements*
-
-## 📝 License
-
-MIT License - See [LICENSE](LICENSE) for details.
+- **Hebrew (RTL)** — Native primary language
+- **English** — Bilingual processing
 
 ---
 
-**Created:** December 2025
+**Created:** December 2025 | **Status:** 🏗️ Architecture Phase
