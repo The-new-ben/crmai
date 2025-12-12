@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { MoneyStream } from "@/components/MoneyStream";
 import { StatsBar } from "@/components/StatsBar";
 import { EmergencyStop } from "@/components/EmergencyStop";
+import { ActivityFeed } from "@/components/ActivityFeed";
+import { SystemHealth } from "@/components/SystemHealth";
+import { TestLeadForm } from "@/components/TestLeadForm";
 import { Lead, DashboardStats } from "@/lib/types";
 
 // Mock data for demonstration
@@ -46,6 +49,7 @@ export default function Dashboard() {
   const [leads, setLeads] = useState<Record<string, Lead[]>>(mockLeads);
   const [isSystemActive, setIsSystemActive] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [notification, setNotification] = useState<string | null>(null);
 
   // Simulate real-time updates
   useEffect(() => {
@@ -60,12 +64,18 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  const showNotification = (message: string) => {
+    setNotification(message);
+    setTimeout(() => setNotification(null), 3000);
+  };
+
   const handleEmergencyStop = async () => {
     setIsLoading(true);
     try {
       // In production: await fetch('/api/system/emergency-stop', { method: 'POST' });
       await new Promise(resolve => setTimeout(resolve, 500));
       setIsSystemActive(false);
+      showNotification("🛑 System stopped. All agents paused.");
     } finally {
       setIsLoading(false);
     }
@@ -77,22 +87,64 @@ export default function Dashboard() {
       // In production: await fetch('/api/system/resume', { method: 'POST' });
       await new Promise(resolve => setTimeout(resolve, 500));
       setIsSystemActive(true);
+      showNotification("▶️ System resumed. Agents reactivated.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleTestLead = async (data: any) => {
+    // Simulate sending to API
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Add to incoming leads
+    const newLead: Lead = {
+      id: Date.now().toString(),
+      contact_name: data.name,
+      contact_phone: data.phone,
+      contact_email: data.email,
+      detected_intent: "buying",
+      detected_urgency: 7,
+      estimated_value: Math.floor(Math.random() * 50000) + 10000,
+      business_vertical: "consulting",
+      primary_language: data.language,
+      created_at: new Date().toISOString()
+    };
+
+    setLeads(prev => ({
+      ...prev,
+      incoming: [newLead, ...prev.incoming]
+    }));
+
+    setStats(prev => ({
+      ...prev,
+      incoming: prev.incoming + 1
+    }));
+
+    showNotification(`✅ Lead "${data.name}" added successfully!`);
+  };
+
   return (
     <main className="min-h-screen p-6">
+      {/* Notification Toast */}
+      {notification && (
+        <div className="fixed top-6 right-6 z-50 glass rounded-lg px-4 py-3 animate-slide-up shadow-lg">
+          {notification}
+        </div>
+      )}
+
       {/* Header */}
       <header className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-            Zero-Touch
-          </h1>
-          <p className="text-sm text-zinc-500 mt-1">
-            God-View Dashboard • {isSystemActive ? "🟢 System Active" : "🔴 System Paused"}
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+              Zero-Touch
+            </h1>
+            <p className="text-sm text-zinc-500 mt-1">
+              God-View Dashboard • {isSystemActive ? "🟢 System Active" : "🔴 System Paused"}
+            </p>
+          </div>
+          <SystemHealth />
         </div>
 
         <EmergencyStop
@@ -103,17 +155,32 @@ export default function Dashboard() {
         />
       </header>
 
-      {/* Stats Bar */}
-      <StatsBar stats={stats} />
+      {/* Main Grid */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Stats Bar - Full Width */}
+        <div className="col-span-12">
+          <StatsBar stats={stats} />
+        </div>
 
-      {/* Money Stream Pipeline */}
-      <MoneyStream leads={leads} />
+        {/* Money Stream - Left Side */}
+        <div className="col-span-12 xl:col-span-9">
+          <MoneyStream leads={leads} />
+        </div>
+
+        {/* Activity Feed - Right Side */}
+        <div className="col-span-12 xl:col-span-3">
+          <ActivityFeed />
+        </div>
+      </div>
 
       {/* System Status Footer */}
       <footer className="mt-8 text-center text-xs text-zinc-600">
         <p>Autonomous Business Ecosystem • English Primary | עברית Secondary</p>
         <p className="mt-1">Last sync: {new Date().toLocaleTimeString()}</p>
       </footer>
+
+      {/* Test Lead Form (FAB) */}
+      <TestLeadForm onSubmit={handleTestLead} />
     </main>
   );
 }
